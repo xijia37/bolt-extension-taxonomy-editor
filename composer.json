@@ -1,0 +1,22 @@
+{
+	"name" : "xijia37/bolt-extension-taxonomyeditor",
+	"description" : "taxonomy editor",
+	"type" : "bolt-extension",
+	"require" : {
+		"bolt/bolt" : ">=2.0.0,<3.0.0"
+	},
+	"autoload" : {
+		"files" : [
+			"init.php"
+		],
+		"psr-4" : {
+			"Bolt\\Extension\\xijia37\\TaxonomyEditor\\" : ""
+
+		}
+	},
+	"extra" : {
+		"branch-alias" : {
+			"dev-master" : "dev-develop"
+		}
+	}
+}

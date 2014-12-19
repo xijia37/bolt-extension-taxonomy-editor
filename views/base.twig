@@ -1,0 +1,187 @@
+{% extends "_base/_page-nav.twig" %}
+
+
+{% block page_title __('Taxonomy editor') %}
+{% block page_nav 'Settings/Extensions' %}
+
+{% macro display_menu_item(item) %}
+    <li class="dd-item dd3-item" {{ _self.invoke_data_attributes(item) }}>
+        <div class="dd-handle dd3-handle"></div>
+        <div class="dd3-content">{% if item.label == '' %}<em>{{ __("no label set") }}</em>{% else %}{{ item.label }}{% endif %}</div>
+        <div class="dd-edit dd3-edit pull-right"></div>
+        <div class="dd-editpanel well hidden">
+            <div class="left-inner-addon">
+                <i class="fa fa-tag"></i>
+                <input class="me-input" type="text" data-tag="label" value="{{ item.label }}" placeholder="{{ __("label") }}">
+            </div>
+            <div class="left-inner-addon">
+                <i class="fa fa-font"></i>
+                <input class="me-input" type="text" data-tag="name"{% if item.name is defined %} value="{{ item.name|replace({'_': ' '}) }}"{% endif %} placeholder="{{ __("name") }}">
+            </div>
+
+            <button type="button" class="btn btn-primary me-updateitem">{{ __("Save") }}</button>
+            <button type="button" class="btn btn-danger me-deleteitem">{{ __("Remove from taxonomy") }}</button>
+        </div>
+
+    </li>
+{% endmacro %}
+
+{% macro invoke_data_attributes(item) %}
+{% if item.label is defined %}data-label="{{ item.label }}" {% endif %}
+{% if item.name is defined %}data-name="{{ item.name}}" data-originalname="{{ item.name}}"{% endif %}
+{% endmacro %}
+{#{% block page_script %}#}
+    {#<script src="http://static.hisu.cc/project/bolt/menueditor.js"></script>#}
+    {#<link rel="stylesheet" href="http://static.hisu.cc/project/bolt/menueditor.css" media="screen, projection" type="text/css">#}
+{#{% endblock page_script %}#}
+
+{#{% block page_type 'Content' %}#}
+{% block page_main %}
+{#{% include '_header.twig' with { 'active':'settings' } %}#}
+
+
+<script>
+    // lockfile
+    me_writeLock                    = {{ writeLock }}0;
+
+    // labels
+    trans_nolabelset                = "{{ __("no label set") }}";
+    trans_label                     = "{{ __("label") }}";
+    trans_title                     = "{{ __("title") }}";
+    trans_class                     = "{{ __("css classes") }}";
+    trans_url                       = "{{ __("http://") }}";
+
+    // general messages
+    trans_additem                   = "{{ __("Select an item to add") }}";
+    trans_searchitem                = "{{ __("Search for an item to add") }}";
+    trans_save                      = "{{ __("Save") }}";
+    trans_removefromtaxonomy        = "{{ __("Remove from taxonomy") }}";
+    trans_deleteWithSubmenus        = "{{ __("Are you sure you wish to remove this item from the menu, along with all its sub-items?") }}"
+    trans_menualreadyexists         = "{{ __("A menu with this name already exists...") }}"
+    trans_restorebackup             = "{{ __("Please confirm that you wish to restore the menu") }}"
+    trans_revertChanges             = "{{ __("Are you sure you want to revert changes you have made since you last saved your menus?") }}"
+
+    // errors
+    trans_connectionError           = "{{ __("Something went wrong, please reload the page and try again") }}"
+    trans_writeLockError            = "{{ __("The menu.yml config-file was edited by someone else in the meantime, please reload the page.") }}"
+    trans_writeError                = "{{ __("Unable to save your menu.") }}"
+    trans_parseError                = "{{ __("There's something wrong with this extension, please report to the author and edit your menu manually until this is fixed.") }}"
+    trans_backupFailError           = "{{ __("Unable to save backup! Please make sure MenuEditor/backups is writable by your webserver or disable the feature in the extensions configuration.") }}"
+    trans_backupRestoreFailError    = "{{ __("The backup could not be restored: ") }}"
+</script>
+
+<div id="taxonomy-editor-extension">
+<div class="row">
+    {#<div class="col-lg-12">#}
+        {#<h1 class="page-header">{{ __('Taxonomy editor') }}{{ block('page_title') }}</h1>#}
+    {#</div>#}
+    <div class="col-md-8">
+
+        <ul class="nav nav-tabs" id="filtertabs">
+
+            {% for menu in menus %}
+            <li{% if loop.first %} class="active"{% endif %}><a href="javascript: null;" class="filter" data-filter="me-tab-{{ loop.index0 }}">{{ menu.name }}</a></li>
+            {#<li{% if loop.first %} class="active"{% endif %}><a href="#me-tab-{{ loop.index0 }}" data-toggle="tab" style="color:#555;">{{ menu.name }}</a></li>#}
+            {% endfor %}
+
+            {#<li><a href="#me-tab-new" data-toggle="tabs"><i class="icon-plus"></i>&nbsp;</a></li>#}
+
+        </ul>
+
+        <div class="tab-content">
+            {% for menuname, menu in menus %}
+            {#<div class="tab-pane{% if loop.first %} active{% endif %}" id="me-tab-{{ loop.index0 }}">#}
+
+                {#<div class="dd me-menu" id="me-menu-{{ loop.index0 }}" data-menuname="{{ menuname }}">#}
+                    {#<ol class="dd-list me-menulist sortable">#}
+
+                        {#{% for item in menu.options %}#}
+                            {#{{ _self.display_menu_item(item) }}#}
+                        {#{% endfor %}#}
+
+                    {#</ol>#}
+                {#</div>#}
+            {#</div>#}
+
+            <div class="tabgrouping" data-tab="me-tab-{{ loop.index0 }}" style="display:{% if loop.first %}block{% else %}none{% endif %};">
+                <div class="dd me-menu" id="me-menu-{{ loop.index0 }}" data-menuname="{{ menuname }}">
+                    <ol class="dd-list me-menulist sortable">
+
+                        {% for item in menu.options %}
+                            {{ _self.display_menu_item(item) }}
+                        {% endfor %}
+
+                    </ol>
+                </div>
+
+                {#<div class="dd me-menu" id="me-menu-{{ loop.index0 }}" data-menuname="{{ menuname }}">#}
+                    {#<ol class="dd-list me-menulist">#}
+
+                        {#{% for item in menu %}#}
+                            {#{% include '@MenuEditor/_menuitem.twig' with {item: item} %}#}
+                        {#{% endfor %}#}
+                    {#</ol>#}
+                {#</div>#}
+            </div>
+            {% endfor %}
+
+            {#<div class="tab-pane" id="me-tab-new">#}
+                {#<input type="text" id="me-addmenu-name" placeholder="{{ __("Name of new menu") }}"><br />#}
+                {#<button type="button" class="btn btn-default me-addmenu" id="me-addmenu">{{ __("Add new menu") }}</button>#}
+            {#</div>#}
+
+        </div>
+    </div>
+
+    <aside class="col-md-4">
+        <section>
+            <h2>{{ __("Actions") }}</h2>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary btn-large" id="savemenus">{{ __("Save") }}</button>
+                <button type="button" class="btn btn-primary btn-large dropdown-toggle" data-toggle="dropdown">
+                    <span class="caret"></span>
+                    <span class="sr-only"></span>
+                </button>
+                <ul class="dropdown-menu" id="me-actionmenu" role="actionmenu">
+                    <li><a href="" class="btn btn-warning btn-mini revert-changes" type="button">{{ __("Revert changes") }}</a></li>
+                    {#<li><hr></li>#}
+                    {#{% if backups|length > 0 %}#}
+                    {#{% for backuptime,backup in backups %}#}
+                    {#<li><a href="#" data-filetime="{{ backuptime }}" class="restoremenus">{{ __("Restore %filename%", {'%filename%': backuptime|date}) }}</a></li>#}
+                    {#{% endfor %}#}
+                    {#{% endif %}#}
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h4>{{ __('New item') }}</h4>
+            {#<div name="me-add" class="me-add wide" style="width: 100%;"></div>#}
+            <div style="margin-top: 10px;">
+
+                <div class="left-inner-addon ">
+                    <i class="fa fa-tag"></i>
+                    <input class="me-input" type="text" id="me-add-label" placeholder="名称{# label") #}">
+                </div>
+                <div class="left-inner-addon ">
+                    <i class="fa fa-font"></i>
+                    <input class="me-input" type="text" id="me-add-name" placeholder="英文代码{#  __("name") #}">
+                </div>
+
+            </div>
+            <button type="button" class="btn btn-tertiary me-additem" id="me-add">{{ __("Add to Taxonomy") }}</button>
+        </section>
+
+    </aside>
+</div>
+</div>
+
+<div class="modal hide" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-body">
+        <p>&nbsp;</p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">{{ __("Close") }}</button>
+    </div>
+</div>
+{% endblock %}
